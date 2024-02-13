@@ -1,0 +1,20 @@
+{
+  "entities": [
+    {
+      "id": "a",
+      "x": 126,
+      "y": 194,
+      "text": "hello world",
+      "color": "#67d0e3",
+      "background": "#909912"
+    },
+    {
+      "id": "b",
+      "x": 525,
+      "y": 420,
+      "text": "good bye world",
+      "color": "#818d15",
+      "background": "#6c3a62"
+    }
+  ]
+}
