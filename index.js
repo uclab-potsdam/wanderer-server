@@ -8,52 +8,48 @@ import { JSONFilePreset } from "lowdb/node";
 const httpServer = createServer();
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:5173",
+    // origin: "http://localhost:5174",
+    origin: "*",
   },
 });
 
-const defaultData = {
-  entities: [
-    {
-      id: "a",
-      x: 400,
-      y: 100,
-      text: "hello world",
-      color: "green",
-    },
-    {
-      id: "b",
-      x: 720,
-      y: 300,
-      text: "good bye world",
-      color: "#FFF",
-      background: "#000",
-    },
-  ],
-};
+const defaultData = {};
 
-const db = await JSONFilePreset("db.json", defaultData);
+// const db = await JSONFilePreset("db.json", defaultData);
 
 io.on("connection", (socket) => {
+  let db = null;
   console.log("connected socket:", socket.id);
 
-  socket.on("fetch", (arg) => {
+  socket.on("create", async (data) => {
+    const id = crypto.randomUUID();
+    db = await JSONFilePreset(`${id}.json`, data ?? defaultData);
+    socket.emit("created", id);
+  });
+
+  socket.on("open", async (id) => {
+    db = await JSONFilePreset(`${id}.json`, null);
+    console.log(db);
     socket.emit("data", db.data);
   });
 
-  socket.on("update", async (patch) => {
+  socket.on("fetch", async (id) => {
+    db = await JSONFilePreset(`${id}.json`, null);
+    socket.emit("data", db.data);
+  });
+
+  socket.on("patch", async (patch) => {
     // console.log(patch);
     socket.broadcast.emit("update", patch);
     applyPatch(db.data, patch);
-
     console.log("patch");
     write();
   });
-});
 
-const write = debounce(async () => {
-  console.log("write");
-  await db.write();
-}, 1000);
+  const write = debounce(async () => {
+    console.log("write");
+    await db.write();
+  }, 1000);
+});
 
 httpServer.listen(3000);
